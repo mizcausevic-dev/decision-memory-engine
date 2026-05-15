@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Decision records with the assumptions that made them safe.</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #05101b;
+        --panel: #0b1623;
+        --panel-2: #102032;
+        --line: rgba(255,255,255,0.08);
+        --text: #eef5ff;
+        --muted: #9fb3cd;
+        --blue: #7ccfff;
+        --amber: #f3c36e;
+        --green: #63d9a6;
+        --red: #ff8796;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", system-ui, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(124,207,255,0.14), transparent 25%),
+          linear-gradient(180deg, #02060c 0%, var(--bg) 100%);
+      }
+      a { color: inherit; text-decoration: none; }
+      .shell { min-height: 100vh; display: grid; grid-template-columns: 250px minmax(0,1fr); }
+      .sidebar {
+        border-right: 1px solid rgba(255,255,255,0.06);
+        background: rgba(0,0,0,0.28);
+        padding: 24px 18px;
+        display: flex; flex-direction: column;
+      }
+      .brand {
+        display: flex; gap: 14px; align-items: center; padding: 10px 12px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .mark {
+        width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px;
+        background: linear-gradient(135deg, #1090bf, #5e7dff); font-weight: 900;
+        box-shadow: 0 0 22px rgba(94,125,255,0.28);
+      }
+      .brand strong { display:block; font-size:14px; }
+      .brand span { display:block; margin-top:4px; color:var(--blue); font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
+      .nav {
+        margin-top: 18px;
+      }
+      .nav-link {
+        display:block; padding: 13px 14px; border-radius: 14px; color:#8598b7;
+        font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+      }
+      .nav-link.active { color: var(--blue); background: rgba(124,207,255,0.08); border: 1px solid rgba(124,207,255,0.14); }
+      .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+      .sidecard {
+        margin-top: auto; border-top: 1px solid rgba(255,255,255,0.06); padding: 18px 12px 6px;
+      }
+      .sidecard .k { color:#6d809c; font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+      .sidecard .v { margin-top:6px; font-size:12px; font-weight:800; }
+      .main { padding: 0 32px 32px; }
+      .topbar {
+        position: sticky; top: 0; z-index: 2; display:flex; justify-content:space-between; gap:18px; align-items:center;
+        padding: 22px 0 18px; border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: linear-gradient(180deg, rgba(5,16,27,0.94), rgba(5,16,27,0.82));
+        backdrop-filter: blur(16px);
+      }
+      .status {
+        display:inline-flex; gap:10px; align-items:center; padding:10px 14px; border-radius:999px;
+        border:1px solid rgba(124,207,255,0.14); background: rgba(124,207,255,0.06);
+        color:#d9ebff; font-size:11px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+      }
+      .dot { width:8px; height:8px; border-radius:999px; background:var(--blue); box-shadow: 0 0 12px rgba(124,207,255,0.9); }
+      .meta-row { display:flex; gap:16px; }
+      .meta-box {
+        padding:10px 14px; border-radius:16px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03);
+      }
+      .meta-box span { display:block; color:#7084a0; font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+      .meta-box strong { display:block; margin-top:6px; font-size:12px; font-weight:800; }
+      .hero {
+        margin-top: 28px; border-radius: 30px; border:1px solid var(--line);
+        background: linear-gradient(180deg, rgba(10,20,33,0.96), rgba(7,13,22,0.96));
+        box-shadow: 0 26px 56px rgba(0,0,0,0.28);
+        overflow: hidden;
+      }
+      .hero-grid { display:grid; grid-template-columns: minmax(0, 1.3fr) 340px; }
+      .hero-copy { padding: 30px; }
+      .eyebrow { color: var(--blue); font-size: 11px; font-weight: 900; letter-spacing: .26em; text-transform: uppercase; }
+      h1 { margin:16px 0 0; font-size: clamp(42px,5vw,72px); line-height:.92; font-family: Georgia, "Times New Roman", serif; letter-spacing:-.05em; }
+      .hero-copy p { margin:14px 0 0; color: var(--muted); font-size: 18px; line-height: 1.58; max-width: 780px; }
+      .tabs { display:flex; flex-wrap:wrap; gap:10px; margin-top: 20px; }
+      .tab {
+        padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03); color:#b4c4dc; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
+      }
+      .tab.active { color: var(--amber); border-color: rgba(243,195,110,0.18); background: rgba(243,195,110,0.08); }
+      .hero-kpis {
+        display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); border-top:1px solid rgba(255,255,255,0.06);
+      }
+      .hero-kpi { padding:18px 20px 20px; border-right:1px solid rgba(255,255,255,0.06); }
+      .hero-kpi:last-child { border-right:0; }
+      .label, .kicker {
+        color:#6f83a0; font-size:10px; font-weight:800; letter-spacing:.16em; text-transform:uppercase;
+      }
+      .hero-kpi .value { margin-top:8px; font-size:34px; font-weight:900; }
+      .hero-callout {
+        border-left:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); padding: 28px;
+      }
+      .hero-callout h3 { margin:0; font-size:12px; font-weight:900; letter-spacing:.16em; text-transform:uppercase; color:#7c90ab; }
+      .hero-callout p { margin:14px 0 0; color:#dde8fb; font-size:15px; line-height:1.62; }
+      .section {
+        margin-top: 24px; border-radius: 26px; border:1px solid var(--line); background: var(--panel);
+        overflow:hidden; box-shadow: 0 18px 44px rgba(0,0,0,0.22);
+      }
+      .section-head { padding:22px 24px 16px; border-bottom:1px solid rgba(255,255,255,0.05); }
+      .section-head h2 { margin:10px 0 0; font-size:26px; font-family: Georgia, "Times New Roman", serif; letter-spacing:-.03em; }
+      .section-head p { margin:10px 0 0; color:var(--muted); font-size:15px; line-height:1.56; max-width:920px; }
+      .section-body { padding:24px; }
+      .grid-4, .grid-3, .grid-2 { display:grid; gap:18px; }
+      .grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .card, .panel {
+        border-radius:20px; border:1px solid rgba(255,255,255,0.06);
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.08));
+        padding:18px;
+      }
+      .card .value { margin-top:10px; font-size:36px; font-weight:900; }
+      .card p, .panel p { margin:10px 0 0; color:var(--muted); font-size:14px; line-height:1.48; }
+      .decision-card {
+        border-radius:22px; border:1px solid rgba(255,255,255,0.06); background: rgba(4,9,17,0.58); overflow:hidden;
+      }
+      .decision-top { padding:20px 22px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:18px; align-items:start; }
+      .decision-top h3 { margin:0; font-size:23px; letter-spacing:-.03em; }
+      .meta { margin-top:8px; color:var(--muted); font-size:13px; }
+      .decision-bottom { padding:18px 22px 22px; border-top:1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); }
+      .pill-stack { display:flex; flex-wrap:wrap; gap:8px; }
+      .pill {
+        display:inline-flex; padding:7px 10px; border-radius:999px; background: rgba(124,207,255,0.08); color:var(--blue);
+        font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+      }
+      .badge {
+        display:inline-flex; padding:8px 12px; border-radius:999px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.16em;
+      }
+      .ready { color:var(--green); background: rgba(99,217,166,0.12); border:1px solid rgba(99,217,166,0.14); }
+      .watch { color:var(--amber); background: rgba(243,195,110,0.12); border:1px solid rgba(243,195,110,0.14); }
+      .recover { color:var(--red); background: rgba(255,135,150,0.12); border:1px solid rgba(255,135,150,0.14); }
+      .code {
+        border-radius:22px; border:1px solid rgba(255,255,255,0.08); background: rgba(2,6,12,0.9); overflow:hidden;
+      }
+      .code-head {
+        padding:16px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+      }
+      .lights { display:flex; gap:8px; }
+      .lights i { width:11px; height:11px; display:block; border-radius:999px; }
+      .lights i:nth-child(1) { background: rgba(255,135,150,0.7); }
+      .lights i:nth-child(2) { background: rgba(243,195,110,0.7); }
+      .lights i:nth-child(3) { background: rgba(99,217,166,0.7); }
+      pre { margin:0; padding:18px; white-space:pre-wrap; overflow:auto; color:#dce8fb; font-size:13px; line-height:1.58; font-family:"Cascadia Code", Consolas, monospace; }
+      table { width:100%; border-collapse:collapse; }
+      th, td { text-align:left; padding:14px 12px; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:top; }
+      th { color:#7f93ad; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.14em; }
+      td { font-size:13px; color:var(--text); }
+      .timeline-item + .timeline-item { margin-top:16px; }
+      .timeline-item strong { display:block; font-size:15px; }
+      .timeline-item span { display:block; margin-top:6px; color:var(--muted); font-size:12px; line-height:1.5; }
+      .footer { display:flex; flex-wrap:wrap; gap:18px; margin:18px 0 8px; color:#7388a6; font-size:10px; text-transform:uppercase; letter-spacing:.16em; }
+      .footer strong { color:#c2d1e3; }
+      @media (max-width:1200px) {
+        .shell { grid-template-columns:1fr; }
+        .sidebar { display:none; }
+        .hero-grid, .hero-kpis, .grid-4, .grid-3, .grid-2 { grid-template-columns:1fr; }
+        .topbar { flex-direction:column; align-items:flex-start; position:static; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div>
+          <div class="brand">
+            <div class="mark">DM</div>
+            <div>
+              <strong>Decision Memory Engine</strong>
+              <span>Context recovery // v1.0</span>
+            </div>
+          </div>
+          <div class="nav"><a class="nav-link " href="/">Overview</a><a class="nav-link active" href="/memory-board">Memory Board</a><a class="nav-link " href="/replay">Replay</a><a class="nav-link " href="/owners">Owners</a><a class="nav-link " href="/docs">Docs</a></div>
+        </div>
+        <div class="sidecard">
+          <div class="k">Lead recommendation</div>
+          <div class="v">Revisit the decisions carrying stale assumptions before the next board, launch, or go-to-market briefing inherits outdated logic.</div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <div class="status"><span class="dot"></span>Decision recall registry live</div>
+          <div class="meta-row">
+            <div class="meta-box"><span>Watch decisions</span><strong>2 active lanes</strong></div>
+            <div class="meta-box"><span>Stale assumptions</span><strong>3 decision chains</strong></div>
+            <div class="meta-box"><span>Average confidence</span><strong>0.82 baseline</strong></div>
+          </div>
+        </div>
+        <section class="hero">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <div class="eyebrow">Decision Memory Engine</div>
+              <h1>Decision records with the assumptions that made them safe.</h1>
+              <p>A Python and FastAPI decision engine for storing prior decisions, rationale, confidence, stale assumptions, and operator context recovery.</p>
+              <div class="tabs"><a class="tab " href="/">Overview</a><a class="tab active" href="/memory-board">Memory Board</a><a class="tab " href="/replay">Replay</a><a class="tab " href="/owners">Owners</a><a class="tab " href="/docs">Docs</a></div>
+            </div>
+            <div class="hero-callout">
+              <h3>Why this matters</h3>
+              <p>Teams usually remember the headline decision, not the assumptions, evidence chain, or expiry conditions that made it safe in the first place.</p>
+            </div>
+          </div>
+          <div class="hero-kpis">
+            <div class="hero-kpi"><div class="label">Decisions</div><div class="value">5</div></div>
+            <div class="hero-kpi"><div class="label">Watch lanes</div><div class="value">2</div></div>
+            <div class="hero-kpi"><div class="label">Stale assumptions</div><div class="value">3</div></div>
+            <div class="hero-kpi"><div class="label">Owners</div><div class="value">5</div></div>
+            <div class="hero-kpi"><div class="label">Avg confidence</div><div class="value">0.82</div></div>
+          </div>
+        </section>
+        
+      <section class="section">
+        <div class="section-head">
+          <div class="kicker">Memory board</div>
+          <h2>Decision records ordered by where semantic drift is most likely to hurt the next move.</h2>
+          <p>Each card ties the original rationale to owner lane, expiry window, and stale-assumption pressure so teams can reuse judgment more safely.</p>
+        </div>
+        <div class="section-body">
+          <div class="grid-2">
+      <div class="decision-card">
+        <div class="decision-top">
+          <div>
+            <h3>Route student re-engagement outreach through advisor-first sequence</h3>
+            <div class="meta">Student Success Systems · education operations · intervention sequencing</div>
+          </div>
+          <span class="badge recover">recover</span>
+        </div>
+        <div class="decision-bottom">
+          <p>Advisor context quality historically outperformed generic campaign touches for at-risk learners.</p>
+          <div class="pill-stack" style="margin-top:14px;">
+            <span class="pill">student success signal hub</span><span class="pill">advisor outreach orchestrator</span><span class="pill">learner intervention ledger</span>
+          </div>
+          <div class="pill-stack" style="margin-top:10px;">
+            <span class="pill">attendance model changed after the decision</span><span class="pill">advisor staffing ratios deteriorated</span><span class="pill">support channel mix shifted toward email</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="decision-card">
+        <div class="decision-top">
+          <div>
+            <h3>Delay general release of the analytics migration until lineage parity</h3>
+            <div class="meta">Analytics Platform · platform reliability · release gate</div>
+          </div>
+          <span class="badge watch">watch</span>
+        </div>
+        <div class="decision-bottom">
+          <p>Lineage mismatches and incomplete semantic contracts risked executive reporting drift immediately after cutover.</p>
+          <div class="pill-stack" style="margin-top:14px;">
+            <span class="pill">semantic metrics catalog</span><span class="pill">dbt governance review</span><span class="pill">release readiness gatekeeper</span>
+          </div>
+          <div class="pill-stack" style="margin-top:10px;">
+            <span class="pill">cutover estimate has moved twice</span><span class="pill">warehouse freshness improved after the last review</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="decision-card">
+        <div class="decision-top">
+          <div>
+            <h3>Prioritize enterprise retention over new-market expansion</h3>
+            <div class="meta">Revenue Operations · revenue strategy · portfolio allocation</div>
+          </div>
+          <span class="badge watch">watch</span>
+        </div>
+        <div class="decision-bottom">
+          <p>Churn volatility and expansion efficiency both indicated higher short-term leverage in protecting the installed base.</p>
+          <div class="pill-stack" style="margin-top:14px;">
+            <span class="pill">Q2 retention review</span><span class="pill">CFO forecast sync</span><span class="pill">support escalation ledger</span>
+          </div>
+          <div class="pill-stack" style="margin-top:10px;">
+            <span class="pill">renewal model refreshed 19 days ago</span><span class="pill">competitor discounting changed after decision date</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="decision-card">
+        <div class="decision-top">
+          <div>
+            <h3>Keep the fraud review queue under manual approval for LATAM</h3>
+            <div class="meta">Fraud Systems · risk operations · risk containment</div>
+          </div>
+          <span class="badge ready">ready</span>
+        </div>
+        <div class="decision-bottom">
+          <p>Baggage propagation and dispute trends both showed unstable signal quality in automated approval lanes.</p>
+          <div class="pill-stack" style="margin-top:14px;">
+            <span class="pill">fraud signal tracer</span><span class="pill">dispute latency review</span><span class="pill">regional payments board</span>
+          </div>
+          <div class="pill-stack" style="margin-top:10px;">
+            <span class="pill">No stale assumptions flagged</span>
+          </div>
+        </div>
+      </div>
+    
+      <div class="decision-card">
+        <div class="decision-top">
+          <div>
+            <h3>Use showing-intent score to drive same-day follow-up cadence</h3>
+            <div class="meta">Brokerage Performance · real estate operations · workflow optimization</div>
+          </div>
+          <span class="badge ready">ready</span>
+        </div>
+        <div class="decision-bottom">
+          <p>Open-house attendance, listing-match fit, and response-time history all supported a faster same-day outreach lane.</p>
+          <div class="pill-stack" style="margin-top:14px;">
+            <span class="pill">showing follow-up orchestrator</span><span class="pill">lead routing command center</span>
+          </div>
+          <div class="pill-stack" style="margin-top:10px;">
+            <span class="pill">No stale assumptions flagged</span>
+          </div>
+        </div>
+      </div>
+    </div>
+        </div>
+      </section>
+    
+        <div class="footer">
+          <span><strong>Discipline:</strong> decision intelligence</span>
+          <span><strong>Focus:</strong> rationale / stale assumptions / recall safety</span>
+          <span><strong>Surface:</strong> operator-first / briefing-safe / replayable</span>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
