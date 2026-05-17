@@ -49,7 +49,7 @@ a new board, product, risk, or operator context.
 ## Local run
 
 ```powershell
-Set-Location "C:\Users\chaus\dev\repos\decision-memory-engine"
+cd decision-memory-engine
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m app.main
@@ -73,7 +73,7 @@ $env:PORT = "5010"
 ## Validation
 
 ```powershell
-Set-Location "C:\Users\chaus\dev\repos\decision-memory-engine"
+cd decision-memory-engine
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 .\.venv\Scripts\python.exe scripts\run_demo.py
 .\.venv\Scripts\python.exe scripts\smoke_check.py
@@ -101,4 +101,4 @@ flowchart LR
   D --> F["Briefing-safe reuse decisions"]
 ```
 
-More detail lives in [C:\Users\chaus\dev\repos\decision-memory-engine\docs\architecture.md](/C:/Users/chaus/dev/repos/decision-memory-engine/docs/architecture.md).
+More detail lives in [docs/architecture.md](./docs/architecture.md).
